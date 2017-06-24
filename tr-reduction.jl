@@ -20,12 +20,9 @@ end
     mark_graph(graph, mark, k, 1:size(graph,1), 1:size(graph,2))
 end
 
-@everywhere function start_kernel_change(graph, mark)
-    change_graph(graph, mark, 1:size(graph,1), 1:size(graph,2))
-end
-
-@everywhere function slice_data()
-
+@everywhere function start_kernel_change(graph, mark, interval_split)
+    idx = indexpids(graph)
+    change_graph(graph, mark, interval_split[idx]+1:interval_split[idx+1], 1:size(graph,2))
 end
 
 function transitive_reduction_parallel(graphin::Array{Int8,2})
@@ -43,8 +40,9 @@ function transitive_reduction_parallel(graphin::Array{Int8,2})
 
     @sync begin
         procs_list = procs(graph)
-        for k in 1:graphsize[1]
-            @async remotecall_wait(start_kernel_change, procs_list[(k%length(procs_list))+1], graph, markedgraph)
+        interval_split = [round(Int, s) for s in linspace(0,size(graph,1),length(procs_list)+1)]
+        for p in procs_list
+            @async remotecall_wait(start_kernel_change, p, graph, markedgraph, interval_split)
         end
     end 
 
@@ -77,7 +75,7 @@ transitive_reduction_parallel(ones(Int8,10,10))
 @time res3 = transitive_reduction_parallel(ones(Int8,10,10))
 @time res4 = transitive_reduction_parallel(ones(Int8,100,100))
 @time res5 = transitive_reduction_parallel(ones(Int8,1000,1000))
-@time res6 = transitive_reduction_parallel(ones(Int8,10000,10000))
+#@time res6 = transitive_reduction_parallel(ones(Int8,10000,10000))
 
 # Verify results
 println(res1)
