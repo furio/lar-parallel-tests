@@ -28,7 +28,7 @@ end
 
 end
 
-function transitive_parallel(graphin::Array{Int8,2})
+function transitive_reduction_parallel(graphin::Array{Int8,2})
     graph = SharedArray{Int8,2}(copy(graphin))
     graphsize = size(graph)
     markedgraph = SharedArray{Bool}(graphsize, init = S -> S[Base.localindexes(S)] = false)
@@ -69,14 +69,15 @@ containment_graph = Array{Int8,2}([
       [0 0 0 0 0 0 1 0]])
 
 # Run once to warm up the GC
-transitive_parallel(ones(Int8,10,10))
+transitive_reduction_parallel(ones(Int8,10,10))
 
 # Test
-@time res1 = transitive_parallel(containment_graph_little)
-@time res2 = transitive_parallel(containment_graph)
-@time res3 = transitive_parallel(ones(Int8,10,10))
-@time res4 = transitive_parallel(ones(Int8,100,100))
-@time res5 = transitive_parallel(ones(Int8,1000,1000))
+@time res1 = transitive_reduction_parallel(containment_graph_little)
+@time res2 = transitive_reduction_parallel(containment_graph)
+@time res3 = transitive_reduction_parallel(ones(Int8,10,10))
+@time res4 = transitive_reduction_parallel(ones(Int8,100,100))
+@time res5 = transitive_reduction_parallel(ones(Int8,1000,1000))
+@time res6 = transitive_reduction_parallel(ones(Int8,10000,10000))
 
 # Verify results
 println(res1)
