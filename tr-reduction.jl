@@ -25,10 +25,8 @@ end
     change_graph!(graph, mark, interval_split[idx]+1:interval_split[idx+1], 1:size(graph,2))
 end
 
-function transitive_reduction_parallel(graphin::Array{Int8,2})
-    graph = SharedArray{Int8,2}(copy(graphin))
+function transitive_reduction_parallel!(graph::SharedArray{Int8,2}, markedgraph::SharedArray{Bool})
     graphsize = size(graph)
-    markedgraph = SharedArray{Bool}(graphsize, init = S -> S[Base.localindexes(S)] = false)
 
     # processes    
     procs_list = procs(graph)
@@ -45,7 +43,15 @@ function transitive_reduction_parallel(graphin::Array{Int8,2})
         for p in procs_list
             @async remotecall_wait(start_kernel_change!, p, graph, markedgraph, interval_split)
         end
-    end 
+    end
+end
+
+function transitive_reduction_parallel(graphin::Array{Int8,2})
+    graph = SharedArray{Int8,2}(copy(graphin))
+    markedgraph = SharedArray{Bool}(size(graph), init = S -> S[Base.localindexes(S)] = false)
+
+    # Time without alloc here
+    transitive_reduction_parallel!(graph, markedgraph)
 
     return graph
 end
