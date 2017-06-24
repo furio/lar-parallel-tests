@@ -29,18 +29,19 @@ function transitive_reduction_parallel(graphin::Array{Int8,2})
     graph = SharedArray{Int8,2}(copy(graphin))
     graphsize = size(graph)
     markedgraph = SharedArray{Bool}(graphsize, init = S -> S[Base.localindexes(S)] = false)
-    
+
+    # processes    
+    procs_list = procs(graph)
+    # graph split
+    interval_split = [round(Int, s) for s in linspace(0,size(graph,1),length(procs_list)+1)]    
 
     @sync begin
-        procs_list = procs(graph)
         for k in 1:graphsize[1]
             @async remotecall_wait(start_kernel_mark!, procs_list[(k%length(procs_list))+1], graph, markedgraph, k)
         end
     end 
 
     @sync begin
-        procs_list = procs(graph)
-        interval_split = [round(Int, s) for s in linspace(0,size(graph,1),length(procs_list)+1)]
         for p in procs_list
             @async remotecall_wait(start_kernel_change!, p, graph, markedgraph, interval_split)
         end
