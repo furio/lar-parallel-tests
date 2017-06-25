@@ -1,7 +1,8 @@
 @everywhere function mark_graph!(graph, mark, k, islice, jslice)
     for i in islice, j in jslice
         gs = min(graph[i,k],graph[k,j])
-        if graph[i,j] <= gs
+        gij = graph[i,j]
+        if  gs != 0 && gij != 0 && gij <= gs
             graph[i,j] = gs
             mark[i,j] = true
         end
@@ -99,6 +100,7 @@ transitive_reduction_parallel(ones(Int8,10,10))
 @time res3 = transitive_reduction_parallel(ones(Int8,10,10))
 @time res4 = transitive_reduction_parallel(ones(Int8,100,100))
 @time res5 = transitive_reduction_parallel(ones(Int8,1000,1000))
+# @time res5 = transitive_reduction_parallel(ones(Int8,10000,10000))
 
 @time sres1 = transitive_reduction_serial(containment_graph_little)
 @time sres2 = transitive_reduction_serial(containment_graph)
